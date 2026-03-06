@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "arunabi25/devops-cicd"
+    }
+
     stages {
 
         stage('Clone Code') {
@@ -11,15 +15,26 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t devops-website .'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
-        stage('Deploy Container') {
+        stage('Push to DockerHub') {
+            steps {
+                sh 'docker push $DOCKER_IMAGE'
+            }
+        }
+
+        stage('Stop Old Container') {
             steps {
                 sh 'docker stop devops-container || true'
                 sh 'docker rm devops-container || true'
-                sh 'docker run -d -p 80:80 --name devops-container devops-website'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh 'docker run -d -p 80:80 --name devops-container $DOCKER_IMAGE'
             }
         }
 
